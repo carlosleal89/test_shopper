@@ -1,0 +1,40 @@
+version: '3'
+services:
+  database:
+    image: mysql:8.0.32
+    container_name: shopper_db
+    ports:
+      - 33060:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - MYSQL_DATABASE=db_test_shopper
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+    container_name: api_shopper
+    ports:
+      - 3001:3001
+    environment:
+      - DB_USER=root
+      - DB_PASS=123456
+      - DB_HOST=database
+      - DB_PORT=33060
+      - DB_NAME=db_test_shopper
+      - EXPRESS_PORT=3001    
+    volumes:
+      - ./backend/:/app-backend/
+    tty: true
+    stdin_open: true
+    depends_on:
+      database:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "lsof", "-t", "-i:3001"] 
+      timeout: 10s
+      retries: 5
+    command: npm run dev
