@@ -31,7 +31,7 @@ const dotenv = __importStar(require("dotenv"));
 const executeSQLScript_1 = require("./database/executeSQLScript");
 dotenv.config();
 const EXPRESS_PORT = process.env.EXPRESS_PORT || 3001;
-(0, executeSQLScript_1.executeSQLScript)();
+(0, executeSQLScript_1.executeSQLScript)(); // executa o script database.sql
 app_1.default.listen(EXPRESS_PORT, () => {
     console.log(`Server is running on port ${EXPRESS_PORT}`);
 });

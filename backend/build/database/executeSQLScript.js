@@ -18,9 +18,7 @@ const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const readSQLFile = (filePath) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        // const fullPath = path.join(__dirname, filePath);
         const sqlQuery = fs_1.default.readFileSync(path_1.default.join(__dirname, filePath)).toString();
-        console.log('TESTE', sqlQuery);
         return sqlQuery;
     }
     catch (error) {

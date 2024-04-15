@@ -26,4 +26,23 @@ export default class ProductService {
       }
     }
   }
+
+  public async checkIfProductsExist(product_code: number[]): Promise<number[] | string> {
+    try {
+      let invalidCodes: number[] = [];
+
+      for (const code of product_code) {
+        const isProduct = await this.productModel.getProductByCode(code);
+        if (!isProduct) {
+          invalidCodes.push(code);
+        }
+      };
+
+      return invalidCodes;
+
+    } catch (error: any) {
+      console.error(`Erro ao buscar os produtos: ${error.message}`);
+      return error.message;
+    }
+  }
 }

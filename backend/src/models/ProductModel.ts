@@ -16,4 +16,22 @@ export default class ProductModel implements IProductModel {
       throw new Error(`Erro ao buscar os produtos: ${error.message}`);
     }
   }
+
+  async getProductByCode(code: number): Promise<IProduct | null> {
+    try {
+      const productByid = await this.model.findOne({
+        where: {
+          code
+        }
+      });
+
+      if (!productByid) return null;
+
+      return productByid as IProduct;
+
+    } catch (error: any) {
+      console.error(`Erro ao buscar o produto: ${error.message}`);
+      throw new Error(`Erro ao buscar o produto: ${error.message}`);
+    }   
+  }
 }

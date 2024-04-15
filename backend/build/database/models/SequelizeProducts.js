@@ -40,7 +40,7 @@ SequelizeProducts.hasMany(SequelizePacks_1.default, {
 });
 SequelizeProducts.hasMany(SequelizePacks_1.default, {
     foreignKey: 'product_id',
-    as: 'packs',
+    as: 'packProducts',
 });
 SequelizePacks_1.default.belongsTo(SequelizeProducts, {
     foreignKey: 'pack_id',
