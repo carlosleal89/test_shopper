@@ -28,8 +28,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const app_1 = __importDefault(require("./app"));
 const dotenv = __importStar(require("dotenv"));
+const executeSQLScript_1 = require("./database/executeSQLScript");
 dotenv.config();
 const EXPRESS_PORT = process.env.EXPRESS_PORT || 3001;
+(0, executeSQLScript_1.executeSQLScript)();
 app_1.default.listen(EXPRESS_PORT, () => {
     console.log(`Server is running on port ${EXPRESS_PORT}`);
 });

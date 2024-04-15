@@ -10,7 +10,7 @@
     "dev": "ts-node-dev src/server.ts",
     "test": "ts-mocha src/tests/*.ts --exit",
     "build": "tsc",
-    "db:reset": "npx -y tsc && npx sequelize-cli db:drop && npx sequelize-cli db:create && npx sequelize-cli db:migrate && npx sequelize-cli db:seed:all",
+    "db:reset": "npx -y tsc && npx sequelize-cli db:drop && npx sequelize-cli db:create && npx sequelize-cli db:migrate",
     "db:reset1": "npx -y tsc && npx sequelize-cli db:drop && npx sequelize-cli db:create",
     "lint": "eslint ./src --ext .ts"
   },

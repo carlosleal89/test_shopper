@@ -6,6 +6,7 @@ import {
   CreationOptional,
 } from 'sequelize';
 import db from '.';
+import SequelizePacks from './SequelizePacks';
 
 export default class SequelizeProducts extends Model<InferAttributes<SequelizeProducts>,
 InferCreationAttributes<SequelizeProducts>> {
@@ -39,4 +40,24 @@ SequelizeProducts.init({
   tableName: 'products',
   timestamps: false,
   underscored: true,
+});
+
+SequelizeProducts.hasMany(SequelizePacks, {
+  foreignKey: 'pack_id',
+  as: 'packs',
+});
+
+SequelizeProducts.hasMany(SequelizePacks, {
+  foreignKey: 'product_id',
+  as: 'packs',
+});
+
+SequelizePacks.belongsTo(SequelizeProducts, {
+  foreignKey: 'pack_id',
+  as: 'pack',
+});
+
+SequelizePacks.belongsTo(SequelizeProducts, {
+  foreignKey: 'product_id',
+  as: 'product',
 });

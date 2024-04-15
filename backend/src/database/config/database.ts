@@ -9,7 +9,10 @@ const config: Options = {
     database: process.env.DB_NAME,
     // port: Number(process.env.DB_PORT) || 33060,
     host: process.env.DB_HOST,
-    dialect: "mysql"
+    dialect: "mysql",
+    dialectOptions: {
+      multipleStatements: true
+    }
   }
 
 export = config;
