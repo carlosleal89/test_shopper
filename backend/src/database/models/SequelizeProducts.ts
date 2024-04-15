@@ -49,7 +49,7 @@ SequelizeProducts.hasMany(SequelizePacks, {
 
 SequelizeProducts.hasMany(SequelizePacks, {
   foreignKey: 'product_id',
-  as: 'packs',
+  as: 'packProducts',
 });
 
 SequelizePacks.belongsTo(SequelizeProducts, {
