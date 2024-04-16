@@ -31,18 +31,25 @@ export default class ProductService {
     }
   }
 
-  public async checkIfProductsExist(productsList: ICsvFile[]): Promise<number[] | string> {
+  public async checkIfProductsExist(productsList: ICsvFile[]) {
+    // tipar o retorno
     try {
-      let invalidCodes: number[] = [];
+      let checkProductsCode: any = {
+        invalidCodes: [],
+        validCodes: [],
+      };
+      //tipar checkProductsCode
 
-      for (const product_code of productsList) {
-        const isProduct = await this.productModel.getProductByCode(Number(product_code.product_code));
+      for (const product of productsList) {
+        const isProduct = await this.productModel.getProductByCode(Number(product.product_code));
         if (!isProduct) {
-          invalidCodes.push(product_code.product_code);
+          checkProductsCode.invalidCodes.push(product.product_code);
+        } else {
+          checkProductsCode.validCodes.push(product);
         }
       };
 
-      return invalidCodes;
+      return checkProductsCode;
 
     } catch (error: any) {
       // refatorar tratativa de erro
@@ -52,29 +59,37 @@ export default class ProductService {
   }
 
   public async updateProductPrice(csvFileName: string) {
+    //mudar nome da função para validateCsvFile (ou algo assim)
     // tipar retorno e parametro
     try {
       const csvFileData = await csvParserHelper(csvFileName);
-      console.log(csvFileData);
       
-      const isValidProductCodes = await this.checkIfProductsExist(csvFileData);
+      const validateProductCodes = await this.checkIfProductsExist(csvFileData);
+      //tipar validateProductCodes
+      const { validCodes, invalidCodes } = validateProductCodes;
 
       const validateFields = this.validationService.validateCsvFile(csvFileData);
+      //tipar
 
-      let validationErrors: any = {};
+      let checkedProducts: any = {
+        validatedProducts: validCodes,
+        validationErrors: {
+          invalidProductsCodes: []
+        }
+      };
 
-      if (isValidProductCodes) {
-        validationErrors.invalidProductsCodes = isValidProductCodes;
+      if (validateProductCodes.invalidCodes) {
+        checkedProducts.validationErrors.invalidProductsCodes.push(invalidCodes);
       }
 
       if (validateFields) {
-        validationErrors.invalidFields = validateFields;
+        checkedProducts.validationErrors.invalidFields = validateFields;
       }
 
-      if (validationErrors) {
-        return { status: 'INVALID_REQUEST', data: validationErrors }
+      if (checkedProducts.validationErrors) {
+        return { status: 'INVALID_REQUEST', data: checkedProducts }
       }
-      return { status: 'SUCCESSFUL', data: csvFileData };
+      return { status: 'SUCCESSFUL', data: checkedProducts };
       
 
     } catch (error: any) {
