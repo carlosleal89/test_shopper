@@ -16,7 +16,7 @@ export default class ProductController {
   public async updateProductPrice(req: Request, res: Response) {
     if (req.file) {
       const serviceResponse = await this.productService.updateProductPrice(req.file.filename);
-      return res.json(serviceResponse);
+      return res.status(mapStatusHTTP(serviceResponse.status)).json(serviceResponse.data);
     }
     return res.status(mapStatusHTTP('INVALID_REQUEST')).json('Requisição inválida');
   }

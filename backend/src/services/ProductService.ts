@@ -2,6 +2,7 @@ import ProductModel from '../models/ProductModel';
 import { IProductModel } from '../interfaces/IProductModel';
 import { ServiceResponse } from '../interfaces/ServiceResponse';
 import { IProduct } from '../interfaces/IProduct';
+import { ICsvFile } from '../interfaces/ICsvFile';
 import csvParserHelper from '../utils/csvParser';
 
 export default class ProductService {
@@ -28,14 +29,14 @@ export default class ProductService {
     }
   }
 
-  public async checkIfProductsExist(product_code: number[]): Promise<number[] | string> {
+  public async checkIfProductsExist(productsList: ICsvFile[]): Promise<number[] | string> {
     try {
       let invalidCodes: number[] = [];
 
-      for (const code of product_code) {
-        const isProduct = await this.productModel.getProductByCode(code);
+      for (const product_code of productsList) {
+        const isProduct = await this.productModel.getProductByCode(Number(product_code.product_code));
         if (!isProduct) {
-          invalidCodes.push(code);
+          invalidCodes.push(product_code.product_code);
         }
       };
 
@@ -52,7 +53,10 @@ export default class ProductService {
     // tipar retorno e parametro
     try {
       const csvFileData = await csvParserHelper(csvFileName);
-      console.log('service', csvFileData);
+      const isValidProductCodes = await this.checkIfProductsExist(csvFileData)
+      console.log(isValidProductCodes);
+      
+      return { status: 'SUCCESSFUL', data: csvFileData };
       
 
     } catch (error: any) {
