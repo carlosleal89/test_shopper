@@ -13,9 +13,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const ProductModel_1 = __importDefault(require("../models/ProductModel"));
+const csvParser_1 = __importDefault(require("../utils/csvParser"));
+const ValidationService_1 = __importDefault(require("./ValidationService"));
 class ProductService {
-    constructor(productModel = new ProductModel_1.default()) {
+    constructor(productModel = new ProductModel_1.default(), validationService = new ValidationService_1.default()) {
         this.productModel = productModel;
+        this.validationService = validationService;
     }
     getProducts() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -35,25 +38,66 @@ class ProductService {
             }
         });
     }
-    checkIfProductsExist(product_code) {
+    checkIfProductsExist(productsList) {
         return __awaiter(this, void 0, void 0, function* () {
             // tipar o retorno
             try {
-                let invalidCodes = [];
-                product_code.forEach((code) => __awaiter(this, void 0, void 0, function* () {
-                    const isProduct = yield this.productModel.getProductByCode(code);
+                let checkProductsCode = {
+                    invalidCodes: [],
+                    validCodes: [],
+                };
+                //tipar checkProductsCode
+                for (const product of productsList) {
+                    const isProduct = yield this.productModel.getProductByCode(Number(product.product_code));
                     if (!isProduct) {
-                        invalidCodes.push(code);
+                        checkProductsCode.invalidCodes.push(product.product_code);
                     }
-                }));
-                return invalidCodes;
+                    else {
+                        checkProductsCode.validCodes.push(product);
+                    }
+                }
+                ;
+                return checkProductsCode;
             }
             catch (error) {
+                // refatorar tratativa de erro
                 console.error(`Erro ao buscar os produtos: ${error.message}`);
-                return {
-                    status: 'INTERNAL_SERVER_ERROR',
-                    data: { message: error.message },
+                return error.message;
+            }
+        });
+    }
+    updateProductPrice(csvFileName) {
+        return __awaiter(this, void 0, void 0, function* () {
+            //mudar nome da função para validateCsvFile (ou algo assim)
+            // tipar retorno e parametro
+            try {
+                const csvFileData = yield (0, csvParser_1.default)(csvFileName);
+                const validateProductCodes = yield this.checkIfProductsExist(csvFileData);
+                //tipar validateProductCodes
+                const { validCodes, invalidCodes } = validateProductCodes;
+                const validateFields = this.validationService.validateCsvFile(validCodes);
+                //tipar
+                let checkedProducts = {
+                    validatedProducts: validCodes,
+                    validationErrors: {
+                        invalidProductsCodes: []
+                    }
                 };
+                if (validateProductCodes.invalidCodes) {
+                    checkedProducts.validationErrors.invalidProductsCodes.push(invalidCodes);
+                }
+                if (validateFields) {
+                    checkedProducts.validationErrors.invalidFields = validateFields;
+                }
+                if (checkedProducts.validationErrors) {
+                    return { status: 'INVALID_REQUEST', data: checkedProducts };
+                }
+                return { status: 'SUCCESSFUL', data: checkedProducts };
+            }
+            catch (error) {
+                // refatorar tratativa de erro
+                console.error(`Erro ao atualizar os produtos: ${error.message}`);
+                return error.message;
             }
         });
     }

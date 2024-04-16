@@ -2,7 +2,7 @@ import ProductModel from '../models/ProductModel';
 import { IProductModel } from '../interfaces/IProductModel';
 import { ServiceResponse } from '../interfaces/ServiceResponse';
 import { IProduct } from '../interfaces/IProduct';
-import { ICsvFile } from '../interfaces/ICsvFile';
+import { ICsvFileParsed } from '../interfaces/ICsvFile';
 import csvParserHelper from '../utils/csvParser';
 import ValidationService from './ValidationService';
 
@@ -31,7 +31,7 @@ export default class ProductService {
     }
   }
 
-  public async checkIfProductsExist(productsList: ICsvFile[]) {
+  public async checkIfProductsExist(productsList: ICsvFileParsed[]) {
     // tipar o retorno
     try {
       let checkProductsCode: any = {
@@ -58,32 +58,36 @@ export default class ProductService {
     }
   }
 
-  public async updateProductPrice(csvFileName: string) {
-    //mudar nome da função para validateCsvFile (ou algo assim)
+  public async validateData(csvFileName: string) {
     // tipar retorno e parametro
     try {
-      const csvFileData = await csvParserHelper(csvFileName);
+      const csvFileData = await csvParserHelper(csvFileName);      
       
-      const validateProductCodes = await this.checkIfProductsExist(csvFileData);
+      // const validateProductCodes = await this.checkIfProductsExist(csvFileData);
       //tipar validateProductCodes
-      const { validCodes, invalidCodes } = validateProductCodes;
+      const { validCodes, invalidCodes } = await this.checkIfProductsExist(csvFileData);;
 
-      const validateFields = this.validationService.validateCsvFile(validCodes);
-      //tipar
+      // const validateFields = this.validationService.validateCsvFile(validCodes);
+      const {
+        validationErrors, validProducts
+      } = this.validationService.validateCsvFile(validCodes);
+      //tipar      
 
       let checkedProducts: any = {
-        validatedProducts: validCodes,
         validationErrors: {
-          invalidProductsCodes: []
+          invalidProductsCodes: [],
+          // missingPrice: [],
+          // invalidPrice: [],
         }
       };
 
-      if (validateProductCodes.invalidCodes) {
-        checkedProducts.validationErrors.invalidProductsCodes.push(invalidCodes);
-      }
+      if (invalidCodes) {
+        checkedProducts.validationErrors.invalidProductsCodes.push(...invalidCodes);
+      } // codigos inexistentes
 
-      if (validateFields) {
-        checkedProducts.validationErrors.invalidFields = validateFields;
+      if (validationErrors) {
+        checkedProducts.validationErrors.missingPrice = validationErrors.missingPrice;
+        checkedProducts.validationErrors.invalidPrice = validationErrors.invalidPrice;
       }
 
       if (checkedProducts.validationErrors) {
