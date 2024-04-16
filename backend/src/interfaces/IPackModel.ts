@@ -1,5 +1,5 @@
 import { IPack } from "./IPack";
 
 export interface IPackModel {
-  getAllPacks(): Promise<IPack | null>;
+  getPackByProductID(product_id: number): Promise<IPack | null>;
 }

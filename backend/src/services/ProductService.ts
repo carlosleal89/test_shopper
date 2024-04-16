@@ -61,16 +61,15 @@ export default class ProductService {
   public async validateData(csvFileName: string) {
     // tipar retorno e parametro
     try {
-      const csvFileData = await csvParserHelper(csvFileName);      
-      
-      // const validateProductCodes = await this.checkIfProductsExist(csvFileData);
-      //tipar validateProductCodes
+      const csvFileData = await csvParserHelper(csvFileName);
+
       const { validCodes, invalidCodes } = await this.checkIfProductsExist(csvFileData);;
 
-      // const validateFields = this.validationService.validateCsvFile(validCodes);
       const {
         validationErrors, validProducts
-      } = this.validationService.validateCsvFile(validCodes);
+      } = await this.validationService.validateCsvFile(validCodes);
+      // console.log(validProducts);
+      
       //tipar      
 
       let checkedProducts: any = {
@@ -78,7 +77,8 @@ export default class ProductService {
           invalidProductsCodes: [],
           // missingPrice: [],
           // invalidPrice: [],
-        }
+        },
+        validProducts
       };
 
       if (invalidCodes) {
@@ -88,7 +88,10 @@ export default class ProductService {
       if (validationErrors) {
         checkedProducts.validationErrors.missingPrice = validationErrors.missingPrice;
         checkedProducts.validationErrors.invalidPrice = validationErrors.invalidPrice;
+        checkedProducts.validationErrors.invalidPack = validationErrors.invalidPack;
       }
+
+
 
       if (checkedProducts.validationErrors) {
         return { status: 'INVALID_REQUEST', data: checkedProducts }
