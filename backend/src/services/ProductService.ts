@@ -4,10 +4,12 @@ import { ServiceResponse } from '../interfaces/ServiceResponse';
 import { IProduct } from '../interfaces/IProduct';
 import { ICsvFile } from '../interfaces/ICsvFile';
 import csvParserHelper from '../utils/csvParser';
+import ValidationService from './ValidationService';
 
 export default class ProductService {
   constructor(
     private productModel: IProductModel = new ProductModel(),
+    private validationService = new ValidationService(),
   ) {}
 
   public async getProducts(): Promise<ServiceResponse<IProduct[]>> {
@@ -53,9 +55,25 @@ export default class ProductService {
     // tipar retorno e parametro
     try {
       const csvFileData = await csvParserHelper(csvFileName);
-      const isValidProductCodes = await this.checkIfProductsExist(csvFileData)
-      console.log(isValidProductCodes);
+      console.log(csvFileData);
       
+      const isValidProductCodes = await this.checkIfProductsExist(csvFileData);
+
+      const validateFields = this.validationService.validateCsvFile(csvFileData);
+
+      let validationErrors: any = {};
+
+      if (isValidProductCodes) {
+        validationErrors.invalidProductsCodes = isValidProductCodes;
+      }
+
+      if (validateFields) {
+        validationErrors.invalidFields = validateFields;
+      }
+
+      if (validationErrors) {
+        return { status: 'INVALID_REQUEST', data: validationErrors }
+      }
       return { status: 'SUCCESSFUL', data: csvFileData };
       
 
