@@ -91,8 +91,6 @@ export default class ProductService {
         checkedProducts.validationErrors.invalidPack = validationErrors.invalidPack;
       }
 
-
-
       if (checkedProducts.validationErrors) {
         return { status: 'INVALID_REQUEST', data: checkedProducts }
       }

@@ -21,4 +21,21 @@ export default class PackService {
       return error.message;
     }
   }
+
+  public async getPacks() {
+    try {
+      const allPacks = await this.packModel.getAllPacks();
+
+      if (!allPacks) null;
+
+      return allPacks;
+
+    } catch (error: any) {
+      console.error(`Erro ao buscar os produtos: ${error.message}`);
+      return {
+        status: 'INTERNAL_SERVER_ERROR',
+        data: { message: error.message },
+      }
+    }
+  }
 }

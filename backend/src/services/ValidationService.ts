@@ -1,3 +1,4 @@
+import { IPack } from '../interfaces/IPack';
 import PackService from './PackService';
 
 export default class ValidationService {
@@ -24,10 +25,11 @@ export default class ValidationService {
           checkedProducts.validProducts.push(dataEl);
         }
       }
-      const {validProducts, invalidProducts} = await this.checkProductsInPacks(checkedProducts.validProducts);
-      checkedProducts.validProducts.push(validProducts);
-      checkedProducts.validationErrors.invalidPack.push(invalidProducts);
-      console.log(invalidProducts);
+      const { invalidProducts } = await this.checkProductsInPacks(checkedProducts.validProducts);
+      
+      checkedProducts.validationErrors.invalidPack.push(...invalidProducts);
+
+      await this.validatePacks(checkedProducts.validProducts);
       
       return checkedProducts;
     } catch (error: any) {
@@ -38,22 +40,57 @@ export default class ValidationService {
   public async checkProductsInPacks(data: any) {
     try {
       const validProducts = data;
+      const packsList: any = await this.packService.getPacks();      
       
       let checkedProducts: any = {
-        validProducts: [],
         invalidProducts: [],
       };
       let productInpack: any = [];
       
       for (const product of validProducts) {
         // verifica se os produtos fazem parte de algum pack.
-        // se sim, verificar se existe o preço de reajuste do pack.
-        const isProductInPacks: any = await this.packService.getPackByProductId(Number(product.product_code));
+        const isProductInPacks: any = packsList
+          .find((packEl: IPack) => packEl.product_id === Number(product.product_code));
+
         if (isProductInPacks) {
           const isPackInCSVFile = validProducts
             .find((productEl: any) => Number(productEl.product_code) === isProductInPacks.pack_id);
           
           if (!isPackInCSVFile) {
+            // se sim, mas não houver o código do pack no CSV, adiciona o produto ao array de produtos invalidos;
+            // e remove o elemento do array de produtos validos;
+            const productIndex = validProducts.indexOf(product);
+            checkedProducts.invalidProducts.push(product);
+            validProducts.splice(productIndex, 1);
+          }
+        }
+      }
+      return checkedProducts;
+
+    } catch (error: any) {
+      console.error(error.message);
+    }
+  }
+
+   public async validatePacks(data: any) {
+    try {
+      const validProducts = data;      
+      
+      let checkedProducts: any = {
+        invalidProducts: [],
+      };
+      let productInpack: any = [];
+      
+      for (const product of validProducts) {
+        // verifica se os produtos fazem parte de algum pack.
+        const isProductInPacks: any = await this.packService.getPackByProductId(Number(product.product_code));
+
+        if (isProductInPacks) {
+          const isPackInCSVFile = validProducts
+            .find((productEl: any) => Number(productEl.product_code) === isProductInPacks.pack_id);
+
+          if (!isPackInCSVFile) {
+            // se sim, mas não houver o código do pack no CSV, adiciona o produto ao array de produtos invalidos
             const productIndex = validProducts.indexOf(product);
             checkedProducts.invalidProducts.push(product);
             validProducts.splice(productIndex, 1);
