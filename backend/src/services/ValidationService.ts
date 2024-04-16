@@ -2,15 +2,15 @@ export default class ValidationService {
   public validateCsvFile(data: any) {
     try {
       let fieldsErrors: any = {
-        missingFields: [],
-        invalidValues: [],
+        missingPrice: [],
+        invalidPrice: [],
       };
       for (const dataEl of data) {
-        if (!dataEl.product_code || !dataEl.new_price) {
-          fieldsErrors.missingFields = dataEl;
+        if (!dataEl.new_price) {
+          fieldsErrors.missingPrice.push(dataEl);
         }
         if (isNaN(dataEl.new_price)) {          
-          fieldsErrors.invalidValues.push(dataEl);
+          fieldsErrors.invalidPrice.push(dataEl);
         }
       }
 

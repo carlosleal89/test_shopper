@@ -68,7 +68,7 @@ export default class ProductService {
       //tipar validateProductCodes
       const { validCodes, invalidCodes } = validateProductCodes;
 
-      const validateFields = this.validationService.validateCsvFile(csvFileData);
+      const validateFields = this.validationService.validateCsvFile(validCodes);
       //tipar
 
       let checkedProducts: any = {

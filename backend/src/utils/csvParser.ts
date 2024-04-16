@@ -10,7 +10,11 @@ const csvParserHelper = async (filename: string): Promise<ICsvFile[]> => {
   await new Promise((resolve, reject) => {
     fs.createReadStream(path.join(filePath))
       .pipe(csv())
-      .on('data', (data) => results.push(data))
+      .on('data', (data) => {
+        if (Object.keys(data).length > 0) {
+          results.push(data);
+        } //remove linhas em branco do csv
+      })
       .on('end', () => {
         fs.unlink(filePath, (err) => {
           if (err) {
