@@ -9,9 +9,14 @@ const storage = multer.diskStorage({
   },
   filename: function (req: Request, file: Express.Multer.File, cb: Function) {
     const fileExtension = file.originalname.split('.')[1];
+
+    if (fileExtension !== 'csv') {
+      return cb(new Error('Apenas arquivos CSV são permitidos'));      
+    }
+
     const newFileName = crypto.randomBytes(16).toString('hex');
     cb(null, `${newFileName}.${fileExtension}`);
-  }
+  },
 });
 
 const upload = multer({ storage });

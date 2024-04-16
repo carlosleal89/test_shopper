@@ -2,6 +2,7 @@ import ProductModel from '../models/ProductModel';
 import { IProductModel } from '../interfaces/IProductModel';
 import { ServiceResponse } from '../interfaces/ServiceResponse';
 import { IProduct } from '../interfaces/IProduct';
+import csvParserHelper from '../utils/csvParser';
 
 export default class ProductService {
   constructor(
@@ -41,7 +42,22 @@ export default class ProductService {
       return invalidCodes;
 
     } catch (error: any) {
+      // refatorar tratativa de erro
       console.error(`Erro ao buscar os produtos: ${error.message}`);
+      return error.message;
+    }
+  }
+
+  public async updateProductPrice(csvFileName: string) {
+    // tipar retorno e parametro
+    try {
+      const csvFileData = await csvParserHelper(csvFileName);
+      console.log('service', csvFileData);
+      
+
+    } catch (error: any) {
+      // refatorar tratativa de erro
+      console.error(`Erro ao atualizar os produtos: ${error.message}`);
       return error.message;
     }
   }

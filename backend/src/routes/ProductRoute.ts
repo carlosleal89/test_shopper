@@ -10,8 +10,7 @@ router.get('/', (req: Request, res: Response) =>
   productController.getAllProducts(req, res));
 
 router.post('/update-price', upload.single('file'), (req: Request, res: Response) => {
-  console.log('Arquivo enviado:', req.file?.filename);
-  res.send('Arquivo enviado com sucesso!');
+  productController.updateProductPrice(req, res);
 })
 
 export default router;
