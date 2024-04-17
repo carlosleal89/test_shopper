@@ -1,6 +1,7 @@
 import SequelizePacks from '../database/models/SequelizePacks';
 import { IPack } from '../interfaces/IPack';
 import { IPackModel } from '../interfaces/IPackModel';
+import { Op } from 'sequelize';
 
 export default class PackModel implements IPackModel {
   private model = SequelizePacks;
@@ -41,9 +42,16 @@ export default class PackModel implements IPackModel {
     }
   }
   
-  public async getAllPacks(): Promise<IPack[] | null> {
+  public async getAllPacks(code: number): Promise<IPack[] | null> {
     try {
-      const allPacks = await this.model.findAll();
+      const allPacks = await this.model.findAll({
+        where: {
+          [Op.or]: [
+            { pack_id: code },
+            { product_id: code },
+          ]
+        }
+      });
 
       if (allPacks.length === 0) return null;
 

@@ -22,10 +22,10 @@ export default class PackService {
     }
   }
 
-  public async getPacks() {
+  public async getPacks(code: number) {
     //tipar o retorno 
     try {
-      const allPacks = await this.packModel.getAllPacks();
+      const allPacks = await this.packModel.getAllPacks(code);
 
       if (!allPacks) null;
 
