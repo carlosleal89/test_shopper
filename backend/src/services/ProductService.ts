@@ -44,6 +44,7 @@ export default class ProductService {
         invalidPrices: [],
         invalidPacks: [],
       };
+      let packProducts: any = [];
 
       await Promise.all(csvFileData.map(async (productEl) => {
         const productByCode = await this.productModel.getProductByCode(productEl.product_code);
@@ -51,43 +52,37 @@ export default class ProductService {
         // Valida se o id existe
         if (!productByCode) {
           validationErrors.invalidCodes.push(productEl);
-          // const productIndex: number =  csvFileData.indexOf(productEl);
-          // csvFileData.splice(productIndex, 1);
           return;
         }
         
         // Valida se o preço é um número válido
         if (isNaN(productEl.new_price)) {
           validationErrors.invalidPrices.push(productEl);
-          // const productIndex: number =  csvFileData.indexOf(productEl);
-          // csvFileData.splice(productIndex, 1);
           return;
         }
-  
-        const isPackOrComponent = await this.packService.getPacks(productEl.product_code);
+        
+        const isPackOrComponent = await this.packService.getPacks(Number(productEl.product_code));
+        
         // verifica se o produto faz parte ou é algum pack.
         if (!isPackOrComponent) {
           // se não, envia o produto para validação de preço
           validProducts.push(productEl);
-          // const productIndex: number =  csvFileData.indexOf(productEl);
-          // csvFileData.splice(productIndex, 1);
-          return;
+        } else {
+          packProducts.push(productEl);
         }
 
-        // console.log('CSV', csvFileData);        
+        // const isPack = await this.packService.getPackByPackId(productEl.product_code);
 
-        const isPack = await this.packService.getPackByPackId(productEl.product_code);
-        
-        if (isPack.length > 0) {          
-          const isValidPack = this.validatePack(csvFileData, isPack);
-          if (isValidPack) {
-            validProducts.push(isValidPack)            
-          }                  
-        }
+        // if (isPack.length > 0) {
+        //   const isValidPack = this.validatePack(csvFileData, isPack);
+        //   if (isValidPack) {
+        //     validProducts.push(isValidPack);
+        //   }
+        // }
       }));
   
       if (validationErrors.invalidCodes.length > 0 || validationErrors.invalidPrices.length > 0) {
-        return { status: 'INVALID_REQUEST', data: { validationErrors, validProducts } };
+        return { status: 'INVALID_REQUEST', data: { validationErrors, validProducts, packProducts } };
       }
       return { status: 'SUCCESSFUL', data: { validProducts } };
 
@@ -110,5 +105,21 @@ export default class ProductService {
     } catch (error: any) {
       console.error(error.message);
     }
-  }  
+  }
+
+  public async validatePackComponent(data: any, currCsvEl: any) {
+    try {
+      const csvArray = data;
+
+      const packByProductId = await this.packService.getPackByProductId(currCsvEl);
+
+      for (const csvEl of csvArray) {
+        // const tst = isPackArray.find((packEl: any) => Number(csvEl.product_code) === packEl.product.code);
+        // if (tst) return csvEl;
+      }
+
+    } catch (error: any) {
+      console.error(error.message);
+    }
+  }
 }

@@ -54,8 +54,8 @@ export default class PackModel implements IPackModel {
       const allPacks = await this.model.findAll({
         where: {
           [Op.or]: [
+            { product_id: code },
             { pack_id: code },
-            { product_id: code }
           ]
         }
       });
