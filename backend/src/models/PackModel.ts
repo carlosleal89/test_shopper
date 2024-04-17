@@ -48,7 +48,7 @@ export default class PackModel implements IPackModel {
         where: {
           [Op.or]: [
             { pack_id: code },
-            { product_id: code },
+            { product_id: code }
           ]
         }
       });

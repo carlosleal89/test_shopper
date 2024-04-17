@@ -5,6 +5,7 @@ import { ServiceResponse } from '../interfaces/ServiceResponse';
 import { IProduct } from '../interfaces/IProduct';
 import { ICsvFileParsed } from '../interfaces/ICsvFile';
 import csvParserHelper from '../utils/csvParser';
+import { IPack } from '../interfaces/IPack';
 // import ValidationService from './ValidationService';
 
 export default class ProductService {
@@ -70,42 +71,85 @@ export default class ProductService {
       let validationErrors: any = {
         invalidCodes: [],
         invalidPrices: [],
+        invalidPacks: [],
       };
 
       await Promise.all(csvFileData.map(async (productEl) => {
         const productByCode = await this.productModel.getProductByCode(productEl.product_code);
+        
+        // Valida se o id existe
         if (!productByCode) {
           validationErrors.invalidCodes.push(productEl);
           const productIndex: number =  csvFileData.indexOf(productEl);
           csvFileData.splice(productIndex, 1);
           return;
-        } // Valida se o id existe
-  
+        }
+        
+        // Valida se o preço é um número válido
         if (isNaN(productEl.new_price)) {
           validationErrors.invalidPrices.push(productEl);
           const productIndex: number =  csvFileData.indexOf(productEl);
           csvFileData.splice(productIndex, 1);
           return;
-        } // Valida se o preço é um número válido
+        }
   
         const isPack = await this.packService.getPacks(productEl.product_code);
-  
         if (!isPack) {
           validProducts.push(productEl);
           const productIndex: number =  csvFileData.indexOf(productEl);
           csvFileData.splice(productIndex, 1);
           return;
-        } else {
-          console.log('PACK', isPack);
         }
+
+        console.log(csvFileData);
+        
+        
+        // // valida se o produto é um pack;
+        // if (!isPack) {
+        //   const isPackComponent: IPack = await this.packService.getPackByProductId(productEl.product_code);
+        //   // verifica se faz parte de um pack
+        //   if (!isPackComponent) {
+        //     // não faz parte de um pack então vai pra validação de preço
+        //     validProducts.push(productEl);
+        //     const productIndex: number =  csvFileData.indexOf(productEl);
+        //     csvFileData.splice(productIndex, 1);
+        //     return;
+        //   } else {
+        //     // se faz parte de um pack valida se o codigo do pack esta no csv
+        //     const isPackCSV = csvFileData.find((csvEl) => isPackComponent.pack_id === Number(csvEl.product_code));
+        //     if (!isPackCSV) {
+        //       validationErrors.invalidPacks.push(productEl);
+        //       const productIndex: number =  csvFileData.indexOf(productEl);
+        //       csvFileData.splice(productIndex, 1);
+        //       return;
+        //     }
+        //   }
+        // } else {
+        //   // se for um pack, valida se pelo menos um code de produto esta no csv
+        //   const packsByPackID = await this.packService.getPacks(productEl.product_code);
+        //   csvFileData.forEach((csvEl) => {
+        //     const isPackComponent = packsByPackID?.find((packEL) => packEL.product_id === Number(csvEl.product_code));
+        //     console.log(isPackComponent);
+        //     if (isPackComponent) {
+        //       validProducts.push(productEl);
+        //       const productIndex: number =  csvFileData.indexOf(productEl);
+        //       csvFileData.splice(productIndex, 1);
+        //       return;
+        //     } else {
+        //       validationErrors.invalidPacks.push(productEl);
+        //       const productIndex: number =  csvFileData.indexOf(productEl);
+        //       csvFileData.splice(productIndex, 1);
+        //       return;
+        //     }
+        //   });
+
+        // }
       }));
   
-      console.log('CODES', validationErrors);
-  
-      if (validationErrors) {
+      if (validationErrors.invalidCodes.length > 0 || validationErrors.invalidPrices.length > 0) {
         return { status: 'INVALID_REQUEST', data: { validationErrors, validProducts } };
       }
-      return { status: 'SUCCESSFUL', data: validProducts };
+      return { status: 'SUCCESSFUL', data: { validProducts } };
   
     } catch (error: any) {
       console.error(`Erro ao atualizar os produtos: ${error.message}`);

@@ -37,7 +37,11 @@ class ProductModel {
                 const productByid = yield this.model.findOne({
                     where: {
                         code
-                    }
+                    },
+                    // include: [
+                    //   { model: SequelizePacks, as: 'packs' },
+                    //   // { model: SequelizePacks, as: 'packProducts' },
+                    // ]
                 });
                 if (!productByid)
                     return null;

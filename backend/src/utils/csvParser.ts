@@ -1,11 +1,11 @@
 import csv from 'csv-parser';
 import fs from 'fs';
 import path from 'path';
-import { ICsvFile } from '../interfaces/ICsvFile';
+import { ICsvFileParsed } from '../interfaces/ICsvFile';
 
-const csvParserHelper = async (filename: string): Promise<ICsvFile[]> => {
+const csvParserHelper = async (filename: string): Promise<ICsvFileParsed[]> => {
   const filePath = path.join(__dirname, `../uploads/${filename}`);
-  const results: ICsvFile[] = [];
+  const results: ICsvFileParsed[] = [];
 
   await new Promise((resolve, reject) => {
     fs.createReadStream(path.join(filePath))

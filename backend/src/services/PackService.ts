@@ -22,6 +22,20 @@ export default class PackService {
     }
   }
 
+  public async getPackByPackId(pack_id: number) {
+    //tipar o retorno 
+      try {
+        const packByPackId = await this.packModel.getPackByPackId(Number(pack_id));
+        if (!packByPackId) return null;
+  
+        return packByPackId;
+  
+      } catch (error: any) {
+        console.error(`Erro ao buscar o pack: ${error.message}`);
+        return error.message;
+      }
+    }
+
   public async getPacks(code: number) {
     //tipar o retorno 
     try {
@@ -33,10 +47,6 @@ export default class PackService {
 
     } catch (error: any) {
       console.error(`Erro ao buscar os produtos: ${error.message}`);
-      return {
-        status: 'INTERNAL_SERVER_ERROR',
-        data: { message: error.message },
-      }
     }
   }
 }

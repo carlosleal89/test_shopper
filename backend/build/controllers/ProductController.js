@@ -27,7 +27,7 @@ class ProductController {
     updateProductPrice(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             if (req.file) {
-                const serviceResponse = yield this.productService.updateProductPrice(req.file.filename);
+                const serviceResponse = yield this.productService.validateData(req.file.filename);
                 return res.status((0, mapStatusToHTTP_1.default)(serviceResponse.status)).json(serviceResponse.data);
             }
             return res.status((0, mapStatusToHTTP_1.default)('INVALID_REQUEST')).json('Requisição inválida');
