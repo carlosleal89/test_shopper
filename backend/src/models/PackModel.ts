@@ -1,4 +1,5 @@
 import SequelizePacks from '../database/models/SequelizePacks';
+import SequelizeProducts from '../database/models/SequelizeProducts';
 import { IPack } from '../interfaces/IPack';
 import { IPackModel } from '../interfaces/IPackModel';
 import { Op } from 'sequelize';
@@ -24,17 +25,23 @@ export default class PackModel implements IPackModel {
     }
   }
 
-  public async getPackByPackId(pack_id: number): Promise<IPack | null> {
+  public async getPacksByPackId(pack_id: number): Promise<IPack[] | null> {
     try {
-      const packByPackId = await this.model.findOne({
+      const packByPackId = await this.model.findAll({
         where: {
           pack_id
-        }
+        },
+        include: [
+          {
+            model: SequelizeProducts,
+            as: 'product'
+          }
+        ]
       });
 
       if (!packByPackId) return null;
 
-      return packByPackId as IPack;
+      return packByPackId as IPack[];
 
     } catch (error: any) {
       console.error(`Erro ao buscar o pack: ${error.message}`);

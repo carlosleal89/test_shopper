@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const SequelizePacks_1 = __importDefault(require("../database/models/SequelizePacks"));
+const SequelizeProducts_1 = __importDefault(require("../database/models/SequelizeProducts"));
 const sequelize_1 = require("sequelize");
 class PackModel {
     constructor() {
@@ -36,13 +37,19 @@ class PackModel {
             }
         });
     }
-    getPackByPackId(pack_id) {
+    getPacksByPackId(pack_id) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const packByPackId = yield this.model.findOne({
+                const packByPackId = yield this.model.findAll({
                     where: {
                         pack_id
-                    }
+                    },
+                    include: [
+                        {
+                            model: SequelizeProducts_1.default,
+                            as: 'product'
+                        }
+                    ]
                 });
                 if (!packByPackId)
                     return null;

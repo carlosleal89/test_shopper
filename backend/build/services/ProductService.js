@@ -39,30 +39,6 @@ class ProductService {
             }
         });
     }
-    // public async checkIfProductsExist(productsList: ICsvFileParsed[]) {
-    //   // tipar o retorno
-    //   try {
-    //     let checkProductsCode: any = {
-    //       invalidCodes: [],
-    //       validCodes: [],
-    //     };
-    //     //tipar checkProductsCode
-    //     for (const product of productsList) {
-    //       const isProduct = await this.productModel.getProductByCode(Number(product.product_code));
-    //       console.log('TESTE', isProduct);
-    //       if (!isProduct) {
-    //         checkProductsCode.invalidCodes.push(product.product_code);
-    //       } else {
-    //         checkProductsCode.validCodes.push(product);
-    //       }
-    //     };
-    //     return checkProductsCode;
-    //   } catch (error: any) {
-    //     // refatorar tratativa de erro
-    //     console.error(`Erro ao buscar os produtos: ${error.message}`);
-    //     return error.message;
-    //   }
-    // }
     validateData(csvFileName) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -89,47 +65,19 @@ class ProductService {
                         csvFileData.splice(productIndex, 1);
                         return;
                     }
-                    const isPack = yield this.packService.getPacks(productEl.product_code);
-                    console.log(isPack);
-                    // // valida se o produto é um pack;
-                    // if (!isPack) {
-                    //   const isPackComponent: IPack = await this.packService.getPackByProductId(productEl.product_code);
-                    //   // verifica se faz parte de um pack
-                    //   if (!isPackComponent) {
-                    //     // não faz parte de um pack então vai pra validação de preço
-                    //     validProducts.push(productEl);
-                    //     const productIndex: number =  csvFileData.indexOf(productEl);
-                    //     csvFileData.splice(productIndex, 1);
-                    //     return;
-                    //   } else {
-                    //     // se faz parte de um pack valida se o codigo do pack esta no csv
-                    //     const isPackCSV = csvFileData.find((csvEl) => isPackComponent.pack_id === Number(csvEl.product_code));
-                    //     if (!isPackCSV) {
-                    //       validationErrors.invalidPacks.push(productEl);
-                    //       const productIndex: number =  csvFileData.indexOf(productEl);
-                    //       csvFileData.splice(productIndex, 1);
-                    //       return;
-                    //     }
-                    //   }
-                    // } else {
-                    //   // se for um pack, valida se pelo menos um code de produto esta no csv
-                    //   const packsByPackID = await this.packService.getPacks(productEl.product_code);
-                    //   csvFileData.forEach((csvEl) => {
-                    //     const isPackComponent = packsByPackID?.find((packEL) => packEL.product_id === Number(csvEl.product_code));
-                    //     console.log(isPackComponent);
-                    //     if (isPackComponent) {
-                    //       validProducts.push(productEl);
-                    //       const productIndex: number =  csvFileData.indexOf(productEl);
-                    //       csvFileData.splice(productIndex, 1);
-                    //       return;
-                    //     } else {
-                    //       validationErrors.invalidPacks.push(productEl);
-                    //       const productIndex: number =  csvFileData.indexOf(productEl);
-                    //       csvFileData.splice(productIndex, 1);
-                    //       return;
-                    //     }
-                    //   });
-                    // }
+                    const isPackOrComponent = yield this.packService.getPacks(productEl.product_code);
+                    // verifica se o produto faz parte ou é algum pack.
+                    if (!isPackOrComponent) {
+                        // se não, envia o produto para validação de preço
+                        validProducts.push(productEl);
+                        const productIndex = csvFileData.indexOf(productEl);
+                        csvFileData.splice(productIndex, 1);
+                        return;
+                    }
+                    console.log('CSV', csvFileData);
+                    const isPack = yield this.packService.getPackByPackId(productEl.product_code);
+                    if (isPack)
+                        console.log(isPack.toJSON());
                 })));
                 if (validationErrors.invalidCodes.length > 0 || validationErrors.invalidPrices.length > 0) {
                     return { status: 'INVALID_REQUEST', data: { validationErrors, validProducts } };

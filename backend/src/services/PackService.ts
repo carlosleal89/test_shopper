@@ -25,7 +25,7 @@ export default class PackService {
   public async getPackByPackId(pack_id: number) {
     //tipar o retorno 
       try {
-        const packByPackId = await this.packModel.getPackByPackId(Number(pack_id));
+        const packByPackId = await this.packModel.getPacksByPackId(Number(pack_id));
         if (!packByPackId) return null;
   
         return packByPackId;

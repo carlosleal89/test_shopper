@@ -36,7 +36,7 @@ class PackService {
         return __awaiter(this, void 0, void 0, function* () {
             //tipar o retorno 
             try {
-                const packByPackId = yield this.packModel.getPackByPackId(Number(pack_id));
+                const packByPackId = yield this.packModel.getPacksByPackId(Number(pack_id));
                 if (!packByPackId)
                     return null;
                 return packByPackId;
