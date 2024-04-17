@@ -1,3 +1,4 @@
+import SequelizePacks from '../database/models/SequelizePacks';
 import SequelizeProducts from '../database/models/SequelizeProducts';
 import { IProduct } from '../interfaces/IProduct';
 import { IProductModel } from '../interfaces/IProductModel';
@@ -22,7 +23,11 @@ export default class ProductModel implements IProductModel {
       const productByid = await this.model.findOne({
         where: {
           code
-        }
+        }, 
+        // include: [
+        //   { model: SequelizePacks, as: 'packs' },
+        //   // { model: SequelizePacks, as: 'packProducts' },
+        // ]
       });
 
       if (!productByid) return null;

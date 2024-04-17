@@ -25,11 +25,13 @@ export default class ValidationService {
           checkedProducts.validProducts.push(dataEl);
         }
       }
-      const { invalidProducts } = await this.checkProductsInPacks(checkedProducts.validProducts);
+
+      const packsList: any = await this.packService.getPacks(); 
+      const { invalidProducts } = await this.checkProductsInPacks(checkedProducts.validProducts, packsList);
       
       checkedProducts.validationErrors.invalidPack.push(...invalidProducts);
 
-      await this.validatePacks(checkedProducts.validProducts);
+      const { invalidPacks } = await this.validatePacks(checkedProducts.validProducts, packsList);
       
       return checkedProducts;
     } catch (error: any) {
@@ -37,15 +39,14 @@ export default class ValidationService {
     }
   }
 
-  public async checkProductsInPacks(data: any) {
+  public async checkProductsInPacks(data: any, packsList: any) {
     try {
       const validProducts = data;
-      const packsList: any = await this.packService.getPacks();      
+      // const packsList: any = await this.packService.getPacks();      
       
       let checkedProducts: any = {
         invalidProducts: [],
       };
-      let productInpack: any = [];
       
       for (const product of validProducts) {
         // verifica se os produtos fazem parte de algum pack.
@@ -72,15 +73,15 @@ export default class ValidationService {
     }
   }
 
-   public async validatePacks(data: any) {
+   public async validatePacks(data: any, packsList: any) {
     try {
       const validProducts = data;      
       
       let checkedProducts: any = {
-        invalidProducts: [],
+        invalidPacks: [],
       };
       let productInpack: any = [];
-      
+
       for (const product of validProducts) {
         // verifica se os produtos fazem parte de algum pack.
         const isProductInPacks: any = await this.packService.getPackByProductId(Number(product.product_code));

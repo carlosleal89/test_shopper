@@ -23,6 +23,7 @@ export default class PackService {
   }
 
   public async getPacks() {
+    //tipar o retorno 
     try {
       const allPacks = await this.packModel.getAllPacks();
 

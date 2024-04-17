@@ -42,6 +42,8 @@ export default class ProductService {
 
       for (const product of productsList) {
         const isProduct = await this.productModel.getProductByCode(Number(product.product_code));
+        console.log('TESTE', isProduct);
+        
         if (!isProduct) {
           checkProductsCode.invalidCodes.push(product.product_code);
         } else {
