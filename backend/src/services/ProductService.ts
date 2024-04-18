@@ -42,7 +42,7 @@ export default class ProductService {
       let validationErrors: any = {
         invalidCodes: [],
         invalidPriceFormat: [],
-        invalidPrice: [],
+        invalidPrices: [],
         invalidPacks: [],
       };
       let packProducts: any = [];
@@ -76,15 +76,17 @@ export default class ProductService {
           // se o preço for valido, envia para o array de produtos validados
           if (isValidPrice) validProducts.push(productEl);
           // se o preço for invalido, envia para o array de produtos invalidos
-          else validationErrors.invalidPrice.push(productEl);
+          else validationErrors.invalidPrices.push(productEl);
           return;
         } else {
           // se for ou fizer parte de um pack, envia para o array de packs para fazer uma validação
           packProducts.push(productEl);
         }
       }));
+      if (packProducts.length > 0) {
+        await this.validatePack(packProducts)
 
-      await this.validatePack(packProducts)
+      }
   
       if (validationErrors.invalidCodes.length > 0 || validationErrors.invalidPrices.length > 0) {
         return { status: 'INVALID_REQUEST', data: { validationErrors, validProducts, packProducts } };
