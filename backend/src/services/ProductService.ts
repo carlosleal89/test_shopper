@@ -41,7 +41,7 @@ export default class ProductService {
       let validProducts: any = [];
       let validationErrors: any = {
         invalidCodes: [],
-        invalidPrices: [],
+        invalidPriceFormat: [],
         invalidPacks: [],
       };
       let packProducts: any = [];
@@ -57,7 +57,7 @@ export default class ProductService {
         
         // Valida se o preço é um número válido
         if (isNaN(productEl.new_price)) {
-          validationErrors.invalidPrices.push(productEl);
+          validationErrors.invalidPriceFormat.push(productEl);
           return;
         }
         
@@ -68,18 +68,12 @@ export default class ProductService {
           // se não, envia o produto para validação de preço
           validProducts.push(productEl);
         } else {
+          // se for ou fizer parte de um pack, envia para o array de packs para fazer uma validação
           packProducts.push(productEl);
         }
-
-        // const isPack = await this.packService.getPackByPackId(productEl.product_code);
-
-        // if (isPack.length > 0) {
-        //   const isValidPack = this.validatePack(csvFileData, isPack);
-        //   if (isValidPack) {
-        //     validProducts.push(isValidPack);
-        //   }
-        // }
       }));
+
+      await this.validatePack(packProducts)
   
       if (validationErrors.invalidCodes.length > 0 || validationErrors.invalidPrices.length > 0) {
         return { status: 'INVALID_REQUEST', data: { validationErrors, validProducts, packProducts } };
@@ -92,15 +86,45 @@ export default class ProductService {
     }
   }
 
-  public validatePack(data: any, isPack: any) {
+  public async validatePack(packsArray: any[]) {
     try {
-      const csvArray = data;      
-      const isPackArray = isPack;
-
-      for (const csvEl of csvArray) {
-        const tst = isPackArray.find((packEl: any) => Number(csvEl.product_code) === packEl.product.code);
-        if (tst) return csvEl;
+      console.log(packsArray);
+      const packs: string[] = [];
+      const products: string[] = [];
+      const packComponentsMap: Record<string, string[]> = {};    
+      
+      // separa os packs dos componentes
+      for (const packEl of packsArray) {
+        const isPack = await this.packService.getPackByPackId(packEl.product_code);
+        if (isPack.length > 0) {
+          packs.push(packEl.product_code)
+        } else {
+          products.push(packEl.product_code)
+        }
       }
+
+      for (const packCode of packs) {
+        const packComponents = await this.packService.getPackByPackId(Number(packCode));
+        const componentCodes = packComponents.map((component: any) => component.product_id.toString());
+        packComponentsMap[packCode] = componentCodes;
+      }
+
+      const packsWithProducts: Record<string, string[]> = {};
+
+      for (const packCode of packs) {
+        const packComponents = packComponentsMap[packCode];
+        
+        const includedProducts = products.filter((productCode) => packComponents.includes(productCode));
+        if (includedProducts.length > 0) {
+          packsWithProducts[packCode] = includedProducts;
+        }
+      }
+      console.log('PACKSWITHPRODUCTS', packsWithProducts);
+      console.log('PACKS', packs);
+      console.log('PRODUCTS', products);
+      
+      
+      
 
     } catch (error: any) {
       console.error(error.message);

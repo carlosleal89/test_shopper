@@ -61,14 +61,28 @@ class PackModel {
             }
         });
     }
+    // public async getPacksByPackId(pack_id: number): Promise<IPack | null> {
+    //   try {
+    //     const packByPackId = await this.model.findOne({
+    //       where: {
+    //         pack_id
+    //       }
+    //     });
+    //     if (!packByPackId) return null;
+    //     return packByPackId as IPack;
+    //   } catch (error: any) {
+    //     console.error(`Erro ao buscar o pack: ${error.message}`);
+    //     throw new Error(`Erro ao buscar o pack: ${error.message}`);
+    //   }
+    // }
     getAllPacks(code) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const allPacks = yield this.model.findAll({
                     where: {
                         [sequelize_1.Op.or]: [
+                            { product_id: code },
                             { pack_id: code },
-                            { product_id: code }
                         ]
                     }
                 });

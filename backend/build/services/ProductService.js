@@ -46,47 +46,77 @@ class ProductService {
                 let validProducts = [];
                 let validationErrors = {
                     invalidCodes: [],
-                    invalidPrices: [],
+                    invalidPriceFormat: [],
                     invalidPacks: [],
                 };
+                let packProducts = [];
                 yield Promise.all(csvFileData.map((productEl) => __awaiter(this, void 0, void 0, function* () {
                     const productByCode = yield this.productModel.getProductByCode(productEl.product_code);
                     // Valida se o id existe
                     if (!productByCode) {
                         validationErrors.invalidCodes.push(productEl);
-                        const productIndex = csvFileData.indexOf(productEl);
-                        csvFileData.splice(productIndex, 1);
                         return;
                     }
                     // Valida se o preço é um número válido
                     if (isNaN(productEl.new_price)) {
-                        validationErrors.invalidPrices.push(productEl);
-                        const productIndex = csvFileData.indexOf(productEl);
-                        csvFileData.splice(productIndex, 1);
+                        validationErrors.invalidPriceFormat.push(productEl);
                         return;
                     }
-                    const isPackOrComponent = yield this.packService.getPacks(productEl.product_code);
+                    const isPackOrComponent = yield this.packService.getPacks(Number(productEl.product_code));
                     // verifica se o produto faz parte ou é algum pack.
                     if (!isPackOrComponent) {
                         // se não, envia o produto para validação de preço
                         validProducts.push(productEl);
-                        const productIndex = csvFileData.indexOf(productEl);
-                        csvFileData.splice(productIndex, 1);
-                        return;
                     }
-                    console.log('CSV', csvFileData);
-                    const isPack = yield this.packService.getPackByPackId(productEl.product_code);
-                    if (isPack)
-                        console.log(isPack.toJSON());
+                    else {
+                        // se for ou fizer parte de um pack, envia para o array de packs para fazar uma validação
+                        packProducts.push(productEl);
+                    }
                 })));
+                yield this.validatePack(packProducts);
                 if (validationErrors.invalidCodes.length > 0 || validationErrors.invalidPrices.length > 0) {
-                    return { status: 'INVALID_REQUEST', data: { validationErrors, validProducts } };
+                    return { status: 'INVALID_REQUEST', data: { validationErrors, validProducts, packProducts } };
                 }
                 return { status: 'SUCCESSFUL', data: { validProducts } };
             }
             catch (error) {
                 console.error(`Erro ao atualizar os produtos: ${error.message}`);
                 return { status: 'ERROR', message: error.message };
+            }
+        });
+    }
+    validatePack(packsArray) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                console.log(packsArray);
+                let validationErrors = {
+                    invalidPacks: [],
+                    invalidPrices: []
+                };
+                for (const packEl of packsArray) {
+                    const isPack = yield this.packService.getPackByPackId(packEl.product_code);
+                    if (isPack.length > 0)
+                        console.log('TESTE', JSON.stringify(isPack, null, 2));
+                    ;
+                }
+            }
+            catch (error) {
+                console.error(error.message);
+            }
+        });
+    }
+    validatePackComponent(data, currCsvEl) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const csvArray = data;
+                const packByProductId = yield this.packService.getPackByProductId(currCsvEl);
+                for (const csvEl of csvArray) {
+                    // const tst = isPackArray.find((packEl: any) => Number(csvEl.product_code) === packEl.product.code);
+                    // if (tst) return csvEl;
+                }
+            }
+            catch (error) {
+                console.error(error.message);
             }
         });
     }

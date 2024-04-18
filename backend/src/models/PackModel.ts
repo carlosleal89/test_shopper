@@ -48,6 +48,24 @@ export default class PackModel implements IPackModel {
       throw new Error(`Erro ao buscar o pack: ${error.message}`);
     }
   }
+
+  // public async getPacksByPackId(pack_id: number): Promise<IPack | null> {
+  //   try {
+  //     const packByPackId = await this.model.findOne({
+  //       where: {
+  //         pack_id
+  //       }
+  //     });
+
+  //     if (!packByPackId) return null;
+
+  //     return packByPackId as IPack;
+
+  //   } catch (error: any) {
+  //     console.error(`Erro ao buscar o pack: ${error.message}`);
+  //     throw new Error(`Erro ao buscar o pack: ${error.message}`);
+  //   }
+  // }
   
   public async getAllPacks(code: number): Promise<IPack[] | null> {
     try {
