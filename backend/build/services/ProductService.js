@@ -69,7 +69,7 @@ class ProductService {
                         validProducts.push(productEl);
                     }
                     else {
-                        // se for ou fizer parte de um pack, envia para o array de packs para fazar uma validação
+                        // se for ou fizer parte de um pack, envia para o array de packs para fazer uma validação
                         packProducts.push(productEl);
                     }
                 })));
@@ -88,24 +88,60 @@ class ProductService {
     validatePack(packsArray) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                console.log(packsArray);
-                let validationErrors = {
-                    invalidPacks: [],
-                    invalidPrices: []
-                };
+                const packs = [];
+                const products = [];
+                const packsWithComponents = {};
+                const invalidPacks = [];
+                const invalidProducts = [];
+                // separa os packs dos componentes
                 for (const packEl of packsArray) {
                     const isPack = yield this.packService.getPackByPackId(packEl.product_code);
-                    if (isPack.length > 0)
-                        console.log('TESTE', JSON.stringify(isPack, null, 2));
-                    ;
+                    if (isPack.length > 0) {
+                        packs.push(packEl.product_code);
+                        const componentCodes = isPack.map((component) => component.product_id.toString());
+                        // atribui os componentes aos packs
+                        packsWithComponents[packEl.product_code] = componentCodes;
+                    }
+                    else {
+                        products.push(packEl.product_code);
+                    }
                 }
+                const validPacks = {};
+                // verifica quais componentes do CSV pertencem aos packs e adiciona ao packsWithProducts
+                for (const packCode of packs) {
+                    const packComponents = packsWithComponents[packCode];
+                    const includedProducts = products.filter((productCode) => packComponents.includes(productCode));
+                    if (includedProducts.length > 0) {
+                        validPacks[packCode] = includedProducts;
+                    }
+                    else {
+                        invalidPacks.push(packCode);
+                    }
+                }
+                // verifica quais produtos não fazem parte de nenhum pack enviado no csv
+                for (const productCode of products) {
+                    let found = false;
+                    for (const packCode in validPacks) {
+                        if (validPacks[packCode].includes(productCode)) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        invalidProducts.push(productCode);
+                    }
+                }
+                console.log('VALID', validPacks);
+                console.log(packsWithComponents);
+                console.log('INVALID_PACKS', invalidPacks);
+                console.log('INVALID_PRODUCTS', invalidProducts);
             }
             catch (error) {
                 console.error(error.message);
             }
         });
     }
-    validatePackComponent(data, currCsvEl) {
+    validatePackPrice(data, currCsvEl) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const csvArray = data;

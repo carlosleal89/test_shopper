@@ -1,7 +1,7 @@
 import ProductModel from '../models/ProductModel';
 import PackService from './PackService';
 import { IProductModel } from '../interfaces/IProductModel';
-import { ServiceResponse } from '../interfaces/ServiceResponse';
+import { ServiceResponse, ServiceResponseError } from '../interfaces/ServiceResponse';
 import { IProduct } from '../interfaces/IProduct';
 import { ICsvFileParsed } from '../interfaces/ICsvFile';
 import csvParserHelper from '../utils/csvParser';
@@ -37,11 +37,12 @@ export default class ProductService {
   public async validateData(csvFileName: string) {
     try {
       const csvFileData: ICsvFileParsed[] = await csvParserHelper(csvFileName);
-  
+      //tipar
       let validProducts: any = [];
       let validationErrors: any = {
         invalidCodes: [],
         invalidPriceFormat: [],
+        invalidPrice: [],
         invalidPacks: [],
       };
       let packProducts: any = [];
@@ -65,8 +66,18 @@ export default class ProductService {
         
         // verifica se o produto faz parte ou é algum pack.
         if (!isPackOrComponent) {
-          // se não, envia o produto para validação de preço
-          validProducts.push(productEl);
+          // se não, valida o preço
+          const isValidPrice = this
+            .validateProductPrice(
+              Number(productEl.new_price),
+              Number(productByCode.cost_price),
+              Number(productByCode.sales_price)
+            );
+          // se o preço for valido, envia para o array de produtos validados
+          if (isValidPrice) validProducts.push(productEl);
+          // se o preço for invalido, envia para o array de produtos invalidos
+          else validationErrors.invalidPrice.push(productEl);
+          return;
         } else {
           // se for ou fizer parte de um pack, envia para o array de packs para fazer uma validação
           packProducts.push(productEl);
@@ -82,7 +93,7 @@ export default class ProductService {
 
     } catch (error: any) {
       console.error(`Erro ao atualizar os produtos: ${error.message}`);
-      return { status: 'ERROR', message: error.message };
+      return { status: 'INTERNAL_SERVER_ERROR', message: error.message };
     }
   }
 
@@ -90,30 +101,32 @@ export default class ProductService {
     try {
       const packs: string[] = [];
       const products: string[] = [];
-      const validPacks: Record<string, string[]> = {};
+      const packsWithComponents: Record<string, string[]> = {};
       const invalidPacks: string[] = [];
       const invalidProducts: string[] = []; 
       
       // separa os packs dos componentes
+      console.log('TESTE');
       for (const packEl of packsArray) {
+        
         const isPack = await this.packService.getPackByPackId(packEl.product_code);
         if (isPack.length > 0) {
           packs.push(packEl.product_code);
           const componentCodes = isPack.map((component: any) => component.product_id.toString());
           // atribui os componentes aos packs
-          validPacks[packEl.product_code] = componentCodes;
+          packsWithComponents[packEl.product_code] = componentCodes;
         } else {
           products.push(packEl.product_code);
         }
       }
 
-      const packsWithProducts: Record<string, string[]> = {};
+      const validPacks: Record<string, string[]> = {};
       // verifica quais componentes do CSV pertencem aos packs e adiciona ao packsWithProducts
       for (const packCode of packs) {
-        const packComponents = validPacks[packCode];
+        const packComponents = packsWithComponents[packCode];
         const includedProducts = products.filter((productCode) => packComponents.includes(productCode));
         if (includedProducts.length > 0) {
-          packsWithProducts[packCode] = includedProducts;
+          validPacks[packCode] = includedProducts;
         } else {
           invalidPacks.push(packCode);
         }
@@ -122,8 +135,8 @@ export default class ProductService {
       // verifica quais produtos não fazem parte de nenhum pack enviado no csv
       for (const productCode of products) {
         let found = false;
-        for (const packCode in packsWithProducts) {
-          if (packsWithProducts[packCode].includes(productCode)) {
+        for (const packCode in validPacks) {
+          if (validPacks[packCode].includes(productCode)) {
             found = true;
             break;
           }
@@ -133,28 +146,39 @@ export default class ProductService {
         }
       }
 
-      console.log('VALID', packsWithProducts);
+      console.log('VALID', validPacks);      
       console.log('INVALID_PACKS', invalidPacks);
       console.log('INVALID_PRODUCTS', invalidProducts);
 
     } catch (error: any) {
       console.error(error.message);
+      return { status: 'INTERNAL_SERVER_ERROR', data: error.message };
     }
   }
 
-  public async validatePackPrice(data: any, currCsvEl: any) {
+  public validateProductPrice(new_price: number, cost_price: number, sales_price: number): boolean | ServiceResponseError {
     try {
-      const csvArray = data;
-
-      const packByProductId = await this.packService.getPackByProductId(currCsvEl);
-
-      for (const csvEl of csvArray) {
-        // const tst = isPackArray.find((packEl: any) => Number(csvEl.product_code) === packEl.product.code);
-        // if (tst) return csvEl;
+      if (new_price < cost_price) {
+        return false;
       }
+
+      if (new_price > sales_price) {
+        const priceDiff = new_price - sales_price;
+        const percentage = (priceDiff / sales_price) * 100;
+        if (percentage > 10) return false;
+      }
+
+      if (new_price < sales_price) {
+        const priceDiff = sales_price - new_price;
+        const percentage = (priceDiff / sales_price) * 100;
+        if (percentage > 10) return false;
+      } 
+
+      return true;
 
     } catch (error: any) {
       console.error(error.message);
+      return { status: 'INTERNAL_SERVER_ERROR', data: error.message };
     }
   }
 }
