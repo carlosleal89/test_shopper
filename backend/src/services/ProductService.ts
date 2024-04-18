@@ -88,43 +88,54 @@ export default class ProductService {
 
   public async validatePack(packsArray: any[]) {
     try {
-      console.log(packsArray);
       const packs: string[] = [];
       const products: string[] = [];
-      const packComponentsMap: Record<string, string[]> = {};    
+      const packComponentsMap: Record<string, string[]> = {};
+      const invalidPacks: string[] = [];
+      const invalidProducts: string[] = []; 
       
       // separa os packs dos componentes
       for (const packEl of packsArray) {
         const isPack = await this.packService.getPackByPackId(packEl.product_code);
         if (isPack.length > 0) {
-          packs.push(packEl.product_code)
+          packs.push(packEl.product_code);
+          const componentCodes = isPack.map((component: any) => component.product_id.toString());
+          // atribui os componentes aos packs
+          packComponentsMap[packEl.product_code] = componentCodes;
         } else {
-          products.push(packEl.product_code)
+          products.push(packEl.product_code);
         }
-      }
-
-      for (const packCode of packs) {
-        const packComponents = await this.packService.getPackByPackId(Number(packCode));
-        const componentCodes = packComponents.map((component: any) => component.product_id.toString());
-        packComponentsMap[packCode] = componentCodes;
       }
 
       const packsWithProducts: Record<string, string[]> = {};
-
+      // verifica quais componentes do CSV pertencem aos packs e adiciona ao packsWithProducts
       for (const packCode of packs) {
         const packComponents = packComponentsMap[packCode];
-        
         const includedProducts = products.filter((productCode) => packComponents.includes(productCode));
         if (includedProducts.length > 0) {
           packsWithProducts[packCode] = includedProducts;
+        } else {
+          invalidPacks.push(packCode);
         }
       }
-      console.log('PACKSWITHPRODUCTS', packsWithProducts);
-      console.log('PACKS', packs);
-      console.log('PRODUCTS', products);
-      
-      
-      
+
+      for (const productCode of products) {
+        let found = false;
+        for (const packCode in packsWithProducts) {
+          if (packsWithProducts[packCode].includes(productCode)) {
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          invalidProducts.push(productCode);
+        }
+      }
+
+      console.log('VALID', packsWithProducts);
+      console.log('INVALID_PACKS', invalidPacks);
+      console.log('INVALID_PRODUCTS', invalidProducts);
+      console.log(products);     
 
     } catch (error: any) {
       console.error(error.message);
