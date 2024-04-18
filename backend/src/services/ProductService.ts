@@ -90,7 +90,7 @@ export default class ProductService {
     try {
       const packs: string[] = [];
       const products: string[] = [];
-      const packComponentsMap: Record<string, string[]> = {};
+      const validPacks: Record<string, string[]> = {};
       const invalidPacks: string[] = [];
       const invalidProducts: string[] = []; 
       
@@ -101,7 +101,7 @@ export default class ProductService {
           packs.push(packEl.product_code);
           const componentCodes = isPack.map((component: any) => component.product_id.toString());
           // atribui os componentes aos packs
-          packComponentsMap[packEl.product_code] = componentCodes;
+          validPacks[packEl.product_code] = componentCodes;
         } else {
           products.push(packEl.product_code);
         }
@@ -110,7 +110,7 @@ export default class ProductService {
       const packsWithProducts: Record<string, string[]> = {};
       // verifica quais componentes do CSV pertencem aos packs e adiciona ao packsWithProducts
       for (const packCode of packs) {
-        const packComponents = packComponentsMap[packCode];
+        const packComponents = validPacks[packCode];
         const includedProducts = products.filter((productCode) => packComponents.includes(productCode));
         if (includedProducts.length > 0) {
           packsWithProducts[packCode] = includedProducts;
@@ -119,6 +119,7 @@ export default class ProductService {
         }
       }
 
+      // verifica quais produtos não fazem parte de nenhum pack enviado no csv
       for (const productCode of products) {
         let found = false;
         for (const packCode in packsWithProducts) {
@@ -135,14 +136,13 @@ export default class ProductService {
       console.log('VALID', packsWithProducts);
       console.log('INVALID_PACKS', invalidPacks);
       console.log('INVALID_PRODUCTS', invalidProducts);
-      console.log(products);     
 
     } catch (error: any) {
       console.error(error.message);
     }
   }
 
-  public async validatePackComponent(data: any, currCsvEl: any) {
+  public async validatePackPrice(data: any, currCsvEl: any) {
     try {
       const csvArray = data;
 
